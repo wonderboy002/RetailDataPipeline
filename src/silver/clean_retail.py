@@ -27,6 +27,14 @@ null_count = df_main.filter(
     (col("InvoiceDate").isNull())
 ).count()
 
-# print("Number of Null Rows",null_count)
+print("Number of Null Rows",null_count)
+before=df_main.count()
+print("before Duplicates Removal: ",before)
+df_main=df_main.dropDuplicates(["Invoice","StockCode","InvoiceDate","Customer ID"])
+
+after=df_main.count()
+print("after Duplicates Removal",after)
+
+df_main.write.mode("overwrite").parquet("data/silver/retail_clean")
 
 spark.stop()
