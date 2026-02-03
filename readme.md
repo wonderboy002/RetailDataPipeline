@@ -7,180 +7,111 @@ Overview
 This project implements a production-style batch data pipeline using PySpark and the Medallion Architecture pattern.
 The goal is to simulate how raw business data flows through real data engineering systems — from raw ingestion to analytics-ready tables used for reporting and dashboards.
 
-The pipeline processes the Online Retail II dataset and produces a star schema that can be directly consumed by BI tools or queried using Spark SQL.
-
-Architecture:
+Architecture
 Raw CSV
    ↓
-Bronze Layer  → Raw, replayable data
-   ↓
-Silver Layer  → Cleaned, validated, deduplicated data
-   ↓
-Gold Layer    → Star Schema (Fact + Dimensions)
-   ↓
-Spark SQL / Power BI
+Bronze → Silver → Gold → Analytics
 
-Tech Stack:
+Tech Stack
+
 PySpark
+
 Parquet
+
 Linux / WSL
-Git
+
+Git & GitHub
+
 Spark SQL
 
-Project Structure
+Power BI
+
+Repository Structure
 RetailDataPipeline/
+├── analytics/
+│   ├── retail_analytics.sql
+│   └── run_analytics.py
 │
 ├── bronze/
 │   └── bronze.py
+│
 ├── silver/
 │   └── silver.py
+│
 ├── gold/
 │   ├── dim_customer.py
 │   ├── dim_product.py
 │   ├── dim_date.py
 │   └── fact_sales.py
-├── analytics/
-│   ├── retail_analytics.sql
-│   └── run_analytics.py
+│
 ├── data/
 │   ├── bronze/
 │   ├── silver/
 │   └── gold/
+│
 └── run_pipeline.sh
 
 Bronze Layer
 
-Purpose: Store raw data exactly as received.
+Stores raw data exactly as received.
+No transformations. Written as Parquet.
 
-Reads the original Online Retail II CSV
-
-No transformations
-
-Writes data as Parquet
-
-Acts as a replayable and auditable source
-
-Output:
-data/bronze/online_retail_raw
+Output: data/bronze/online_retail_raw
 
 Silver Layer
 
-Purpose: Create a trusted and clean dataset.
+Creates a clean and trusted dataset.
 
-Transformations applied:
+Transformations
 
-Parsed InvoiceDate using a fixed format
+Parse InvoiceDate
 
-Enforced data types
+Enforce data types
 
-Removed invalid records:
+Remove invalid records
 
-Quantity ≤ 0
+Business-key deduplication
 
-Price ≤ 0
-
-NULLs in business keys
-
-Deduplicated using the business key:
-
-(Invoice, StockCode, InvoiceDate, CustomerID)
-
-
-Output:
-data/silver/retail_clean
+Output: data/silver/retail_clean
 
 Gold Layer
 
-Purpose: Analytics-ready star schema.
+Analytics-ready star schema.
 
 Dimensions
 
-dim_customer → customer_id, country
+dim_customer
 
-dim_product → product_id, product_description
+dim_product
 
-dim_date → date_id, full_date, year, month, day, quarter, week_of_year
+dim_date
 
 Fact
 
 fact_sales
 
-invoice_id
+Analytics
 
-date_id
+Spark SQL queries on top of Gold tables.
 
-customer_id
-
-product_id
-
-quantity
-
-unit_price
-
-sales_amount
-
-This structure allows easy slicing and aggregation in BI tools.
-
-Analytics (Spark SQL)
-
-Gold tables are registered as temp views and queried using Spark SQL.
-
-Examples of analytics:
-
-Revenue by customer
-
-Revenue by country
-
-High value transactions
-
-Customers above average spend
-
-All queries are stored in:
-
-analytics/retail_analytics.sql
-
-
-Executed via:
+Run:
 
 spark-submit analytics/run_analytics.py
 
 Pipeline Orchestration
 
-The full pipeline runs automatically using:
+Run full pipeline:
 
 ./run_pipeline.sh
 
+What I Learned
 
-This executes:
+Medallion Architecture
 
-Bronze ingestion
+Data validation & modeling
 
-Silver transformations
+Fact/dimension design
 
-Gold dimensions
+Spark DataFrames + SQL
 
-Gold fact
-
-Analytics-ready outputs
-
-What I Learned:
-
-How Medallion Architecture works in real pipelines
-
-Data quality validation and business-key deduplication
-
-Fact and dimension modeling (star schema)
-
-Using Spark DataFrames and Spark SQL together
-
-Batch pipeline orchestration using shell scripting
-
-Future Improvements:
-
-Incremental loads instead of full refresh
-
-Partitioning Gold fact tables
-
-Logging and monitoring
-
-Cloud deployment (S3 / Databricks)
+Batch orchestration
